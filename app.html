@@ -5,165 +5,393 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Timebox Scheduler Sample App</title>
     <style>
+      :root {
+        --bg: #f6f7fb;
+        --panel: #ffffff;
+        --text: #1f2937;
+        --muted: #4b5563;
+        --border: #e5e7eb;
+        --primary: #7c3aed;
+        --primary-soft: #a78bfa;
+        --accent: linear-gradient(135deg, #c4b5fd, #7c3aed);
+      }
       body {
         font-family: "Inter", system-ui, sans-serif;
         margin: 0;
-        background: #0f172a;
-        color: #f8fafc;
+        background: radial-gradient(circle at 20% 20%, #ede9fe, transparent 35%),
+          radial-gradient(circle at 80% 0%, #e0e7ff, transparent 30%),
+          var(--bg);
+        color: var(--text);
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 2rem;
       }
+      body.high-contrast {
+        --bg: #0b1020;
+        --panel: #0f172a;
+        --text: #f8fafc;
+        --muted: #cbd5e1;
+        --border: #1f2937;
+        background: #0b1020;
+      }
       .app-shell {
-        width: min(100%, 960px);
-        background: rgba(15, 23, 42, 0.85);
+        width: min(100%, 1100px);
+        background: var(--panel);
         border-radius: 32px;
-        border: 1px solid rgba(148, 163, 184, 0.2);
+        border: 1px solid var(--border);
         padding: 2.5rem;
-        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.6);
+        box-shadow: 0 30px 60px rgba(124, 58, 237, 0.1);
+        transition: background 0.3s ease, color 0.3s ease;
       }
       h1 {
         margin-top: 0;
         font-size: clamp(2rem, 4vw, 2.8rem);
+        color: var(--text);
       }
       p {
-        color: #cbd5f5;
-        margin-bottom: 2rem;
-        max-width: 640px;
+        color: var(--muted);
+        margin-bottom: 1.25rem;
+        max-width: 860px;
       }
       .columns {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: 1.2fr 0.8fr;
         gap: 1.5rem;
       }
       .panel {
-        background: rgba(15, 23, 42, 0.8);
+        background: var(--panel);
         border-radius: 24px;
-        border: 1px solid rgba(148, 163, 184, 0.2);
+        border: 1px solid var(--border);
         padding: 1.5rem;
+        box-shadow: 0 15px 30px rgba(124, 58, 237, 0.08);
       }
       .panel h2 {
         margin-top: 0;
         font-size: 1.1rem;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: #a5b4fc;
+        color: var(--primary);
       }
-      .task {
+      .task-card {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(199, 210, 254, 0.15), rgba(255, 255, 255, 0.9));
+        margin-bottom: 1rem;
+        overflow: hidden;
+      }
+      .task-card summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .task-card summary::-webkit-details-marker {
+        display: none;
+      }
+      .task-summary {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        align-items: center;
+        gap: 1rem;
       }
-      .task:last-child {
-        border-bottom: none;
+      .task-title {
+        font-weight: 700;
+        color: var(--text);
       }
       .tag {
-        font-size: 0.8rem;
-        padding: 0.2rem 0.6rem;
+        font-size: 0.85rem;
+        padding: 0.25rem 0.75rem;
         border-radius: 999px;
-        background: rgba(79, 70, 229, 0.2);
-        color: #c7d2fe;
+        background: rgba(124, 58, 237, 0.1);
+        color: #4c1d95;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 10px;
+        background: #ede9fe;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progress-bar span {
+        display: block;
+        height: 100%;
+        background: var(--accent);
+        width: 0;
+        transition: width 0.2s ease;
+      }
+      .progress-label {
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+      .fields-grid {
+        padding: 0 1.25rem 1.25rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.75rem 0.9rem;
+      }
+      body.high-contrast .field {
+        background: rgba(15, 23, 42, 0.6);
+      }
+      .field-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .field small {
+        color: var(--muted);
+      }
+      .field input,
+      .field textarea,
+      .field select {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.7rem 0.8rem;
+        font-size: 1rem;
+        min-height: 44px;
+        background: #fff;
+        color: var(--text);
+      }
+      body.high-contrast .field input,
+      body.high-contrast .field textarea,
+      body.high-contrast .field select {
+        background: #0f172a;
+        color: #f8fafc;
+      }
+      .field textarea {
+        min-height: 90px;
+        resize: vertical;
       }
       button {
-        margin-top: 1.5rem;
-        padding: 0.9rem 1.6rem;
+        margin-top: 1rem;
+        padding: 1rem 1.6rem;
         border-radius: 999px;
         border: none;
-        background: linear-gradient(120deg, #a855f7, #7c3aed);
+        background: var(--accent);
         color: white;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 1rem;
         cursor: pointer;
         transition: transform 160ms ease, box-shadow 160ms ease;
+        min-height: 44px;
       }
       button:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35);
       }
+      .action-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 1rem 0;
+      }
+      .secondary {
+        background: #e5e7eb;
+        color: var(--text);
+      }
+      body.high-contrast .secondary {
+        background: #1f2937;
+        color: #f8fafc;
+      }
+      .warning {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 14px;
+        background: rgba(248, 113, 113, 0.15);
+        color: #b91c1c;
+        border: 1px solid rgba(248, 113, 113, 0.4);
+      }
       .timeline {
-        margin-top: 1.5rem;
-        border-left: 2px solid rgba(148, 163, 184, 0.2);
+        margin-top: 1rem;
+        border-left: 2px solid var(--border);
         padding-left: 1.25rem;
+        max-height: 600px;
+        overflow-x: auto;
+        overflow-y: auto;
+        white-space: nowrap;
       }
       .timeline-item {
         margin-bottom: 1rem;
+        white-space: normal;
       }
       .timeline-item strong {
-        color: #f4f0ff;
+        color: var(--text);
       }
       .empty-state {
         text-align: center;
         padding: 2rem;
         border-radius: 24px;
-        border: 1px dashed rgba(148, 163, 184, 0.3);
-        color: #cbd5f5;
+        border: 1px dashed var(--border);
+        color: var(--muted);
       }
       a {
-        color: #c7d2fe;
+        color: var(--primary);
+        font-weight: 600;
+      }
+      .helper-text {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .need-help {
+        background: rgba(124, 58, 237, 0.08);
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+      }
+      .icon {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        stroke: currentColor;
+      }
+      @media (max-width: 900px) {
+        .columns {
+          grid-template-columns: 1fr;
+        }
+        .timeline {
+          border-left: none;
+          border-top: 2px solid var(--border);
+          padding-left: 0;
+          padding-top: 1rem;
+        }
       }
     </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body>
     <div class="app-shell">
-      <h1>Sample Day Planner</h1>
+      <div class="helper-text">
+        <span><strong>Need help?</strong> Review the <a href="README.md" aria-label="Open README for best practices">README</a> and best practices.</span>
+        <button class="secondary" id="contrast-toggle" aria-pressed="false" aria-label="Toggle high contrast mode">High contrast mode</button>
+      </div>
+      <h1>AI Timebox Planner</h1>
       <p>
-        This demo illustrates how the Timebox Scheduler aligns deep work, collaboration, and
-        admin time blocks with your natural energy curve. Tap "Generate Plan" to simulate a
-        refreshed day built from the README use cases.
+        Ensure each task includes the 15 essential metadata fields so the scheduler can build a balanced, energy-aware day. Add concrete examples, keep labels visible, and tap "Build my schedule (AI-powered)" once everything is complete.
       </p>
+
+      <div class="action-row" aria-label="Editing actions">
+        <button class="secondary" id="undo" aria-label="Undo last change">Undo</button>
+        <button class="secondary" id="redo" aria-label="Redo change">Redo</button>
+        <button id="generate" aria-label="Build my schedule">Build my schedule (AI-powered)</button>
+      </div>
+
+      <div id="alert" class="warning" role="alert" style="display: none"></div>
+
       <div class="columns">
-        <div class="panel" id="metadata-panel">
+        <div class="panel" id="metadata-panel" aria-label="Task metadata form">
           <h2>Task metadata</h2>
-          <div class="task">
-            <div>
-              <strong>Write report</strong>
-              <div class="tag">Deep work</div>
-            </div>
-            <span>120 min • Priority A</span>
-          </div>
-          <div class="task">
-            <div>
-              <strong>Design review</strong>
-              <div class="tag">Collaboration</div>
-            </div>
-            <span>60 min • Deadline today</span>
-          </div>
-          <div class="task">
-            <div>
-              <strong>Client emails</strong>
-              <div class="tag">Admin</div>
-            </div>
-            <span>45 min • Flexible</span>
-          </div>
-          <div class="task">
-            <div>
-              <strong>Team slides</strong>
-              <div class="tag">Creative</div>
-            </div>
-            <span>90 min • Needs flow</span>
-          </div>
+          <div id="task-list"></div>
         </div>
-        <div class="panel">
+        <div class="panel" aria-label="Recommended timeline">
           <h2>AI-recommended timeline</h2>
           <div class="timeline" id="timeline"></div>
           <div class="empty-state" id="empty-state">Generate a plan to populate the day.</div>
-          <button id="generate">Generate plan</button>
         </div>
       </div>
-      <p style="margin-top: 2rem; font-size: 0.9rem">
+
+      <p style="margin-top: 2rem; font-size: 0.95rem">
         Back to <a href="index.html">landing page</a>
       </p>
     </div>
 
     <script>
+      const taskTemplates = [
+        {
+          title: "Write report",
+          description: "Draft the Q3 strategy report with charts",
+          duration: "120",
+          priority: "A",
+          deadline: "2024-09-30",
+          dependencies: "Outline approved",
+          energy: "High",
+          location: "Home office",
+          participants: "Data lead, Product manager",
+          mode: "Creative",
+          effort: "4",
+          flexibility: "Medium",
+          status: "Not started",
+          reward: "Will unlock leadership sign-off",
+          tools: "Notion, Google Docs",
+        },
+        {
+          title: "Design review",
+          description: "Review the new onboarding flow screens",
+          duration: "60",
+          priority: "B",
+          deadline: "2024-09-20",
+          dependencies: "Screens ready",
+          energy: "Medium",
+          location: "HQ collab room",
+          participants: "Design squad, PM",
+          mode: "Analytical",
+          effort: "3",
+          flexibility: "Low",
+          status: "In progress",
+          reward: "Clarifies next sprint scope",
+          tools: "Figma, Loom",
+        },
+        {
+          title: "Client emails",
+          description: "Respond to priority client follow-ups",
+          duration: "45",
+          priority: "C",
+          deadline: "2024-09-18",
+          dependencies: "Feedback list finalized",
+          energy: "Low",
+          location: "Inbox zero zone",
+          participants: "Client success partner",
+          mode: "Administrative",
+          effort: "2",
+          flexibility: "High",
+          status: "Not started",
+          reward: "Keeps relationship warm",
+          tools: "Gmail templates",
+        },
+        {
+          title: "Team slides",
+          description: "Create weekly progress slides with wins",
+          duration: "90",
+          priority: "A",
+          deadline: "2024-09-21",
+          dependencies: "Metrics updated",
+          energy: "High",
+          location: "Focus pod",
+          participants: "Delivery lead",
+          mode: "Creative",
+          effort: "3",
+          flexibility: "Medium",
+          status: "Not started",
+          reward: "Aligns leadership",
+          tools: "Slides, KPI dashboards",
+        },
+      ];
+
       const plans = [
         [
           { time: "08:00", task: "Morning run", context: "Energy primer" },
-          { time: "09:00", task: "Write report (Part 1)", context: "Deep work" },
+          { time: "09:00", task: "Write report (Part 1)", context: "Deep focus" },
           { time: "10:30", task: "Design review", context: "Collaboration" },
           { time: "13:00", task: "Team slides", context: "Creative" },
           { time: "15:00", task: "Client emails", context: "Admin" },
@@ -177,23 +405,304 @@
         ],
       ];
 
+      const taskList = document.getElementById("task-list");
       const timeline = document.getElementById("timeline");
       const emptyState = document.getElementById("empty-state");
+      const alertBox = document.getElementById("alert");
+      const undoBtn = document.getElementById("undo");
+      const redoBtn = document.getElementById("redo");
+      const contrastToggle = document.getElementById("contrast-toggle");
+
+      let history = [];
+      let historyIndex = -1;
+
+      const fieldDefinitions = [
+        { name: "title", label: "Title", icon: "file-text", placeholder: "Actionable title (e.g., 'Write Q3 report')" },
+        { name: "description", label: "Description", icon: "notebook-pen", placeholder: "Describe scope (e.g., 'Executive summary + charts')" },
+        { name: "duration", label: "Estimated Duration (minutes)", icon: "timer", placeholder: "e.g., 120" },
+        { name: "priority", label: "Priority", icon: "alert-triangle", placeholder: "A, B, or C" },
+        {
+          name: "deadline",
+          label: "Deadline (YYYY-MM-DD)",
+          icon: "calendar",
+          placeholder: "2024-09-30",
+        },
+        { name: "dependencies", label: "Dependencies", icon: "git-branch", placeholder: "Add task dependencies (e.g., 'Outline approved')" },
+        { name: "energy", label: "Energy/Focus Level", icon: "bolt", placeholder: "High / Medium / Low" },
+        { name: "location", label: "Location/Context", icon: "map-pin", placeholder: "e.g., 'Home office'" },
+        { name: "participants", label: "Participants", icon: "users", placeholder: "Participants (e.g., 'John Doe, Product Manager')" },
+        { name: "mode", label: "Task Type (creative, admin, analytical)", icon: "sparkles", placeholder: "Creative / Administrative / Analytical" },
+        { name: "effort", label: "How hard is this task? (1 = easy, 5 = very challenging)", icon: "bar-chart-3", placeholder: "1-5" },
+        { name: "flexibility", label: "Flexibility", icon: "move-3d", placeholder: "How movable is this task?" },
+        { name: "status", label: "Status", icon: "check-circle-2", placeholder: "Not started / In progress / Blocked / Completed" },
+        { name: "reward", label: "Reward/Value", icon: "medal", placeholder: "Describe why this task matters to you (reward/value)." },
+        { name: "tools", label: "Tools & Resources", icon: "toolbox", placeholder: "Tools & resources (e.g., 'Notion, Google Docs')" },
+      ];
+
+      function createTaskCard(task, index) {
+        const details = document.createElement("details");
+        details.className = "task-card";
+        details.open = true;
+        details.dataset.taskIndex = index;
+
+        const summary = document.createElement("summary");
+        const summaryRow = document.createElement("div");
+        summaryRow.className = "task-summary";
+        const title = document.createElement("span");
+        title.className = "task-title";
+        title.textContent = task.title || `Task ${index + 1}`;
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = task.mode || "Task";
+        summaryRow.appendChild(title);
+        summaryRow.appendChild(tag);
+
+        const progressLabel = document.createElement("div");
+        progressLabel.className = "progress-label";
+        progressLabel.innerHTML = `Task completeness: <span data-progress-count>0</span> of 15 fields entered`;
+
+        const progress = document.createElement("div");
+        progress.className = "progress-bar";
+        const progressInner = document.createElement("span");
+        progressInner.dataset.progressBar = "true";
+        progress.appendChild(progressInner);
+
+        summary.appendChild(summaryRow);
+        summary.appendChild(progress);
+        summary.appendChild(progressLabel);
+        details.appendChild(summary);
+
+        const fields = document.createElement("div");
+        fields.className = "fields-grid";
+
+        fieldDefinitions.forEach((field) => {
+          const wrapper = document.createElement("label");
+          wrapper.className = "field";
+          wrapper.htmlFor = `${field.name}-${index}`;
+
+          const label = document.createElement("div");
+          label.className = "field-label";
+          label.innerHTML = `<i class="icon" data-lucide="${field.icon}" aria-hidden="true"></i>${field.label}`;
+          wrapper.appendChild(label);
+
+          let input;
+          if (field.name === "description" || field.name === "reward") {
+            input = document.createElement("textarea");
+          } else if (field.name === "status") {
+            input = document.createElement("select");
+            ["", "Not started", "In progress", "Blocked", "Completed"].forEach((opt) => {
+              const option = document.createElement("option");
+              option.value = opt;
+              option.textContent = opt || "Select status";
+              input.appendChild(option);
+            });
+          } else {
+            input = document.createElement("input");
+            input.type = field.name === "effort" ? "number" : "text";
+            if (field.name === "effort") {
+              input.min = 1;
+              input.max = 5;
+            }
+          }
+
+          input.id = `${field.name}-${index}`;
+          input.name = field.name;
+          input.placeholder = field.placeholder;
+          input.value = task[field.name] || "";
+          input.setAttribute("aria-label", `${field.label} for task ${index + 1}`);
+          input.required = true;
+          wrapper.appendChild(input);
+
+          const helper = document.createElement("small");
+          helper.textContent = field.placeholder;
+          wrapper.appendChild(helper);
+
+          const error = document.createElement("small");
+          error.className = "error";
+          error.style.color = "#b91c1c";
+          error.style.display = "none";
+          error.dataset.errorFor = field.name;
+          wrapper.appendChild(error);
+
+          fields.appendChild(wrapper);
+        });
+
+        details.appendChild(fields);
+        return details;
+      }
+
+      function renderTasks(tasks) {
+        taskList.innerHTML = "";
+        tasks.forEach((task, index) => {
+          const card = createTaskCard(task, index);
+          taskList.appendChild(card);
+        });
+        attachListeners();
+        updateProgress();
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+      }
+
+      function getCurrentState() {
+        return Array.from(document.querySelectorAll(".task-card")).map((card) => {
+          const task = {};
+          fieldDefinitions.forEach((field) => {
+            const input = card.querySelector(`[name="${field.name}"]`);
+            task[field.name] = input.value.trim();
+          });
+          return task;
+        });
+      }
+
+      function applyState(state) {
+        state.forEach((task, index) => {
+          const card = document.querySelector(`.task-card[data-task-index="${index}"]`);
+          if (!card) return;
+          fieldDefinitions.forEach((field) => {
+            const input = card.querySelector(`[name="${field.name}"]`);
+            if (input) input.value = task[field.name] || "";
+          });
+        });
+        updateProgress();
+      }
+
+      function pushHistory() {
+        const snapshot = getCurrentState();
+        history = history.slice(0, historyIndex + 1);
+        history.push(snapshot);
+        historyIndex = history.length - 1;
+        undoBtn.disabled = historyIndex <= 0;
+        redoBtn.disabled = true;
+      }
+
+      function attachListeners() {
+        document.querySelectorAll(".task-card input, .task-card textarea, .task-card select").forEach((input) => {
+          input.addEventListener("input", () => {
+            clearAlert();
+            validateField(input);
+            updateProgress();
+            pushHistory();
+          });
+        });
+      }
+
+      function updateProgress() {
+        document.querySelectorAll(".task-card").forEach((card) => {
+          let filled = 0;
+          fieldDefinitions.forEach((field) => {
+            const input = card.querySelector(`[name="${field.name}"]`);
+            if (input && input.value.trim()) filled += 1;
+          });
+          const progressBar = card.querySelector("[data-progress-bar]");
+          const progressCount = card.querySelector("[data-progress-count]");
+          const percent = Math.round((filled / fieldDefinitions.length) * 100);
+          if (progressBar) progressBar.style.width = `${percent}%`;
+          if (progressCount) progressCount.textContent = `${filled}`;
+        });
+      }
+
+      function validateField(input) {
+        const error = input.parentElement.querySelector('[data-error-for]');
+        if (!error) return true;
+        error.style.display = "none";
+        const value = input.value.trim();
+        if (!value) return false;
+
+        if (input.name === "deadline") {
+          const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+          if (!datePattern.test(value)) {
+            error.textContent = "Deadline must be formatted as YYYY-MM-DD.";
+            error.style.display = "block";
+            return false;
+          }
+        }
+        if (input.name === "effort") {
+          const num = Number(value);
+          if (Number.isNaN(num) || num < 1 || num > 5) {
+            error.textContent = "Effort should be between 1 (easy) and 5 (very challenging).";
+            error.style.display = "block";
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function validateForm() {
+        let missing = [];
+        document.querySelectorAll(".task-card").forEach((card, index) => {
+          fieldDefinitions.forEach((field) => {
+            const input = card.querySelector(`[name="${field.name}"]`);
+            const hasValue = input && input.value.trim();
+            const fieldValid = validateField(input);
+            if (!hasValue || !fieldValid) {
+              missing.push(`Task ${index + 1}: ${field.label}`);
+            }
+          });
+        });
+        return missing;
+      }
+
+      function showAlert(messages) {
+        alertBox.style.display = "block";
+        alertBox.innerHTML = `Please complete all required fields before generating your schedule.<br /><strong>Missing:</strong> ${messages.join(", ")}<br />Tap each to fill in details.`;
+      }
+
+      function clearAlert() {
+        alertBox.style.display = "none";
+        alertBox.textContent = "";
+      }
+
       document.getElementById("generate").addEventListener("click", () => {
+        const missing = validateForm();
+        if (missing.length) {
+          showAlert(missing);
+          return;
+        }
+        clearAlert();
         const selected = plans[Math.floor(Math.random() * plans.length)];
         timeline.innerHTML = selected
           .map(
             (item) => `
-              <div class="timeline-item">
+              <div class="timeline-item" aria-label="${item.task} at ${item.time}">
                 <strong>${item.time}</strong>
-                <div>${item.task}</div>
-                <small style="color: #cbd5f5">${item.context}</small>
+                <div style="font-weight: 600">${item.task}</div>
+                <small style="color: var(--muted)">${item.context}</small>
               </div>
             `
           )
           .join("\n");
         emptyState.style.display = "none";
       });
+
+      undoBtn.addEventListener("click", () => {
+        if (historyIndex > 0) {
+          historyIndex -= 1;
+          applyState(history[historyIndex]);
+          redoBtn.disabled = false;
+          undoBtn.disabled = historyIndex <= 0;
+        }
+      });
+
+      redoBtn.addEventListener("click", () => {
+        if (historyIndex < history.length - 1) {
+          historyIndex += 1;
+          applyState(history[historyIndex]);
+          undoBtn.disabled = false;
+          redoBtn.disabled = historyIndex >= history.length - 1;
+        }
+      });
+
+      contrastToggle.addEventListener("click", () => {
+        document.body.classList.toggle("high-contrast");
+        const pressed = document.body.classList.contains("high-contrast");
+        contrastToggle.setAttribute("aria-pressed", String(pressed));
+      });
+
+      renderTasks(taskTemplates);
+      pushHistory();
+      undoBtn.disabled = true;
+      redoBtn.disabled = true;
     </script>
   </body>
 </html>
